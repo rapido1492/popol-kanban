@@ -7,8 +7,15 @@ public class MyPage_ProjectVO {
 	private String pj_sdate="none";
 	private String pj_ddate="none";
 	private String pj_contents="empty";
+	private String pj_progress="now";
 	
 	
+	public String getPj_progress() {
+		return pj_progress;
+	}
+	public void setPj_progress(String pj_progress) {
+		this.pj_progress = pj_progress;
+	}
 	public int getPj_idx() {
 		return pj_idx;
 	}

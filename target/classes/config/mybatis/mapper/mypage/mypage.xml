@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="mp">
+<mapper namespace="myp">
 
 		<!-- 로그인한 맴버 vo 따오기 -->
 		<select id="login_member" resultType="vo.mypage.MyPage_MemberVO" parameterType="int">
@@ -17,10 +17,180 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 				#{pj_open},
 				#{pj_sdate},
 				#{pj_ddate},
-				#{pj_contents}			
+				#{pj_contents},
+				#{pj_progress}			
 			)	
 		</insert>
-			
+		
+		<!-- group create -->
+		<insert id="g_insert" parameterType="int">
+			Insert INTO pj_group VALUES(
+				g_idx_sequence.NEXTVAL,
+				pj_idx_sequence.CURRVAL, 				
+				#{m_idx},
+				#{m_idx}
+			)	
+		</insert>		
+		
+		<!--나의  p_list 가져오기  -->
+		<select id="p_list" parameterType="int" resultType="vo.mypage.MyPage_ProjectVO2">
+			Select 
+				pj_idx,
+				pj_name,
+			 	pj_open,
+			 	pj_sdate,
+			    pj_ddate,
+			    pj_contents,
+			    pj_progress
+			    from Project Where pj_open='open' AND pj_idx IN(Select pj_idx from pj_group where m_idx=#{m_idx}) Order by pj_progress ASC, pj_ddate ASC
+		</select>
+		<!--나의  p_list (now)가져오기  -->
+		<select id="p_list_now" parameterType="int" resultType="vo.mypage.MyPage_ProjectVO2">
+			Select 
+				pj_idx,
+				pj_name,
+			 	pj_open,
+			 	pj_sdate,
+			    pj_ddate,
+			    pj_contents,
+			    pj_progress
+			    from Project Where pj_open='open' AND pj_progress='now' AND pj_idx IN(Select pj_idx from pj_group where m_idx=#{m_idx}) Order by pj_progress ASC, pj_ddate ASC
+		</select>
+		
+		<!--나의  p_list(past) 가져오기  -->
+		<select id="p_list_past" parameterType="int" resultType="vo.mypage.MyPage_ProjectVO2">
+			Select 
+				pj_idx,
+				pj_name,
+			 	pj_open,
+			 	pj_sdate,
+			    pj_ddate,
+			    pj_contents,
+			    pj_progress
+			    from Project Where pj_open='open' AND pj_progress='past' AND pj_idx IN(Select pj_idx from pj_group where m_idx=#{m_idx}) Order by pj_progress ASC, pj_ddate ASC
+		</select>
+		
+		<!-- progress update해주기  -->
+		<update id="pro_update" parameterType="vo.mypage.MyPage_ProjectVO2">
+			UPDATE project
+			SET pj_progress= #{pj_progress}
+			WHERE pj_idx = #{pj_idx}
+		</update>
+		
+		<!-- pj_leader 가져오기  -->
+		<select id="g_leader" parameterType="int" resultType="int">
+			Select g_leader from pj_group Where pj_idx=#{pj_idx}
+		</select>		
+		<select id="pj_leader" parameterType="int" resultType="java.lang.String">
+			Select m_nick from member Where m_idx=#{g_leader}
+		</select>	
+		
+		<!--프로젝트 삭제-->
+		<update id="pj_delete" parameterType="int">
+			UPDATE project
+			SET pj_open= 'private'
+			WHERE pj_idx = #{pj_idx}
+		</update>
+		
+		<!-- 프로젝트 탈퇴  -->
+	
+		<delete id="pj_out" parameterType="vo.mypage.MyPage_GroupVO" >
+			Delete from pj_group Where pj_idx=#{pj_idx} AND m_idx=#{m_idx}
+		</delete>	
+		
+		<!--프로젝트 수정-->
+		<update id="pj_update" parameterType="vo.mypage.MyPage_ProjectVO">
+			UPDATE project
+			SET pj_name =#{pj_name},
+				pj_open =#{pj_open},
+				pj_sdate =#{pj_sdate},
+				pj_ddate =#{pj_ddate},
+				pj_contents =#{pj_contents}	
+			WHERE pj_idx = #{pj_idx}
+		</update>
+		
+		<!--나의  g_list 가져오기  -->
+		<select id="g_list" parameterType="int" resultType="vo.mypage.MyPage_GroupVO2">
+			Select * from pj_group WHERE pj_idx=#{pj_idx}
+		</select>
+		
+		<!--  g_vo 검색  -->
+		<select id="m_one" parameterType="java.lang.String" resultType="vo.mypage.MyPage_MemberVO">
+			Select * from member WHERE m_email=#{m_email}
+		</select>	
+		
+		<!-- member inviteflag update해주기  -->
+		<update id="in_update" parameterType="int">
+			UPDATE member
+			SET m_inviteflag= 'true'
+			WHERE m_idx = #{recieve_m_idx}
+		</update>
+		
+		<!-- invite data 삽입  -->
+		<insert id="in_insert" parameterType="vo.mypage.MyPage_InviteVO">
+			Insert INTO pj_invite VALUES(
+				in_idx_seqeunce.NEXTVAL,
+				#{send_m_idx},				
+				#{recieve_m_idx},
+				#{pj_idx},
+				'wait'
+			)	
+		</insert>		
+		
+		<!-- 해당 pj의 초대목록 불러오기-->
+		<select id="in_list" parameterType="int" resultType="vo.mypage.MyPage_InviteVO">
+			Select 
+				*
+			 from pj_invite
+			 Where pj_idx=#{pj_idx}
+		</select>
+		
+		<!-- 그룹에서 탈퇴시키기  -->
+		<update id="g_update" parameterType="vo.mypage.MyPage_GroupVO">
+			UPDATE pj_group
+			SET pj_idx = 0
+			WHERE m_idx = #{m_idx} AND pj_idx =#{pj_idx}
+		</update>
+		
+		<update id="g_leader_update" parameterType="vo.mypage.MyPage_GroupVO">
+			UPDATE pj_group
+			SET g_leader = #{g_leader}
+			WHERE pj_idx = #{pj_idx}
+		</update>
+		
+		<!-- Todo목록 가져오기-->
+		<select id="todo_list" parameterType="int" resultType="vo.mypage.MyPage_MemoBoardVO">
+			Select 
+				*
+			 from memoboard
+			 Where m_idx=#{m_idx} AND division = 'todo'
+		</select>
+		
+		<!-- pj_name 가져오기-->
+		<select id="pj_name" parameterType="int" resultType="vo.mypage.MyPage_ProjectVO">
+			Select 
+				*
+			 from project
+			 Where pj_idx=#{pj_idx} 
+		</select>
+		
+		<!-- doing목록 가져오기-->
+		<select id="doing_list" parameterType="int" resultType="vo.mypage.MyPage_MemoBoardVO">
+			Select 
+				*
+			 from memoboard
+			 Where m_idx=#{m_idx} AND division = 'doing'
+		</select>
+		
+		<!-- Todo목록 가져오기-->
+		<select id="done_list" parameterType="int" resultType="vo.mypage.MyPage_MemoBoardVO">
+			Select 
+				*
+			 from memoboard
+			 Where m_idx=#{m_idx} AND division = 'done'
+		</select>
+		
+		
 </mapper>
 
 

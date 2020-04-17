@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper는 나중에 쿼리문을 통해 자동으로 객체를 생성해주는 참조파일 -->
+<mapper namespace="board">
+	
+	<!-- 새 글 등록하기 -->
+	<insert id="board_insert" parameterType="java.util.Map">
+		insert into memoboard values(
+			seq_memoboard_idx.nextVal,
+			#{pj_idx},
+			#{m_idx},
+			#{b_content},
+			sysdate,
+			#{memo_seq},
+			#{division},
+			#{priority},
+			#{subject},
+			0,
+			seq_memoboard_idx.currVal,
+			0
+		)
+	</insert>
+	
+	<insert id="board_coinsert" parameterType="board_comment">
+		insert into BOARDREPLY values(
+			seq_BOARDREPLY_idx.nextVal,
+			#{b_idx},
+			#{rewriter},
+			#{content},
+			sysdate,
+			#{filename},
+			#{m_idx}
+		)
+	</insert>
+	
+	<!-- idx에 해당하는 게시글 한 건 조회 -->
+	<select id="board_one" parameterType="int" resultType="board">
+		select * from memoboardview where b_idx=#{b_idx}
+	</select>
+	
+	<!-- 댓글 리스트 -->
+	<select id="board_replylist" parameterType="int" resultType="board_comment">
+		select * from boardreply where reidx= #{b_idx}
+	</select>
+	
+	<!-- 조회수 증가 -->
+	<update id="update_readhit" parameterType="int">
+		update memoboard set readhit = readhit + 1 where b_idx=#{b_idx}
+	</update>
+	
+ 	<!-- 기준글의 step보다 큰 step을 1씩 증가 -->
+	<!--<update id="board_update_step" parameterType="board">
+		update board set step = step + 1 where ref=#{ref} and step > #{step}
+	</update> -->
+	
+	<!--답글쓰기 -->
+	<!-- <insert id="board_reply" parameterType="board">
+		insert into board values(
+			seq_board_idx.nextVal,
+			#{name},
+			#{subject},
+			#{content},
+			#{pwd},
+			#{ip},
+			sysdate,
+			0,
+			seq_board_idx.currVal,
+			0,
+			0,
+			0,
+			#{filename}
+		)
+	</insert> -->
+	
+	<!-- idx가 일치하는 게시글 한 건 조회 (삭제용)-->
+	<select id="board_idx" parameterType="int" resultType="board">
+		select * from memoboard where b_idx=#{b_idx}
+	</select>
+	
+	<select id="profile_search" parameterType="int" resultType="java.lang.String">
+		select m_photo from member where m_idx=#{m_idx}
+	</select>
+	
+	<!-- 삭제 전 프로젝트 리더 조회 -->
+	<select id="board_leaderSearch" parameterType="int" resultType="int">
+		select NVL(g_leader,0) from pj_group where m_idx=#{m_idx}
+	</select>
+	
+	<!-- 게시글 삭제 -->	
+	<delete id="board_del_update" parameterType="int">
+		delete from memoboard where b_idx=#{b_idx}
+	</delete>
+	
+	<!-- 페이지에 따른 게시물 조회 -->
+	<select id="board_list_condition" parameterType="java.util.Map" resultType="board">
+		select * from 
+		( select rank() over(order by ref desc, step asc) no, 
+		b.*  from (select * from memoboardview where pj_idx=#{pj_idx}) b ) 
+		where no between #{start} and #{end}
+	</select>
+	
+	<!-- 전체 게시물 수 조회 -->
+	<select id="board_count" resultType="int">
+		select count(*) from memoboardview
+	</select>
+	
+	<!-- 글 수정 -->
+	<update id="board_modifyupdate" parameterType="board">
+		update memoboard set subject=#{subject}, b_content=#{b_content}, memo_seq=#{memo_seq}, priority=#{priority}, division=#{division}, 
+		b_date=sysdate where b_idx=#{b_idx}
+	</update>
+	
+	<!-- 글에 첨부된 파일 수정 -->
+	<update id="directory_update" parameterType="java.util.Map">
+		update directory set file_name=#{file_name} where b_idx=#{b_idx}
+	</update>
+	
+	<!-- 파일 directory에 insert -->
+	<insert id="directory_insert" parameterType="java.util.Map" useGeneratedKeys="true">
+			<selectKey keyProperty="b_idx" resultType="int" order="BEFORE"> 
+				SELECT seq_memoboard_idx.nextVal from dual
+			</selectKey>
+			insert into directory values( 
+				seq_directory_idx.nextVal, 
+				#{pj_idx}, 
+				#{b_idx}, 
+				#{m_idx}, 
+				#{pwd}, 
+				#{file_title},
+				#{file_memory},
+				#{file_name} 
+			)
+	</insert>
+	
+	<!-- view 파일 서치 -->	
+	<select id="directory_search" parameterType="int" resultType="vo.mainpage.DirectoryVO">
+		select file_name from directory where b_idx=#{b_idx}
+	</select>
+	
+	<insert id="board_notphoto_insert" parameterType="board">
+		insert into memoboard values(
+			seq_memoboard_idx.nextVal,
+			#{pj_idx},
+			#{m_idx},
+			#{b_content},
+			sysdate,
+			#{memo_seq},
+			#{division},
+			#{priority},
+			#{subject},
+			0,
+			seq_memoboard_idx.currVal,
+			0
+		)
+	</insert>
+	<!-- 유저 초대 시 inviteflag = wait으로 변경 -->
+	<update id="inviteflag_update" parameterType="int">
+		update member set M_INVITEFLAG='wait' where m_idx=#{m_idx}
+	</update>
+	
+	<!-- invite 상태 값 조회 -->
+	<select id="invite_search" resultType="java.lang.String" parameterType="int">
+		select m_inviteflag from member where m_idx=#{m_idx}
+	</select>
+	
+	<!-- 수락 시 inviteflag 다시 false로 변경 -->
+	<update id="invite_accept" parameterType="int">
+		update member set M_INVITEFLAG='false' where m_idx=#{m_idx}
+	</update>
+	
+	<!-- 댓글 유저 닉네임 조회 -->
+	<select id="userNickname" resultType="java.lang.String" parameterType="int">
+		select m_nick from member where m_idx=#{m_idx}
+	</select>
+	
+	<select id="invite_alert" resultType="vo.bbspage.InviteVO" parameterType="int">
+		select * from pj_invite where recieve_m_idx=#{m_idx}
+		
+	</select>
+	
+	<select id="project_search" resultType="java.lang.String" parameterType="int">
+		select pj_name from project where pj_idx=#{pj_idx}
+	</select>
+	
+	<update id="invite_result" parameterType="int">
+		update pj_invite set in_result='true' where in_idx=#{in_idx}
+	</update>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+

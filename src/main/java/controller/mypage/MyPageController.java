@@ -1,27 +1,57 @@
 package controller.mypage;
 
-
+import java.lang.reflect.Array;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.SessionAttribute;
 
 import common.Common;
 import dao.mypage.MyPageDAO;
+import vo.mypage.MyPage_GroupVO;
+import vo.mypage.MyPage_GroupVO2;
+import vo.mypage.MyPage_InviteVO;
 import vo.mypage.MyPage_MemberVO;
+import vo.mypage.MyPage_MemoBoardVO;
 import vo.mypage.MyPage_ProjectVO;
-
+import vo.mypage.MyPage_ProjectVO2;
 
 @Controller
 public class MyPageController {
 	MyPageDAO mypagedao;
+	int m_idx = 1;
+
+	public static Boolean empty(Object obj) {
+		if (obj instanceof String)
+			return obj == null || "".equals(obj.toString().trim());
+		else if (obj instanceof List)
+			return obj == null || ((List) obj).isEmpty();
+		else if (obj instanceof Map)
+			return obj == null || ((Map) obj).isEmpty();
+		else if (obj instanceof Object[])
+			return obj == null || Array.getLength(obj) == 0;
+		else
+			return obj == null;
+	}
+
+	public static Boolean notEmpty(Object obj) {
+		return !empty(obj);
+	}
 
 	public MyPageController() {
 	}
@@ -30,83 +60,495 @@ public class MyPageController {
 		this.mypagedao = mypagedao;
 	}
 
-	@RequestMapping(value = {"/", "/mypage.do"})
-	public String show(Model model, HttpServletRequest request) {
-		/*
-		 * int m_idx = -1; //·Î±×ÀÎ È®ÀÎ ¾ÈµÅÀÖÀ¸¸é -1 Cookie[] cookies = request.getCookies();
-		 * for (Cookie cookie : cookies) { if("login_true".equals(cookie.getName())) {
-		 * m_idx = Integer.parseInt(cookie.getValue()); } else { m_idx = -1;} }
-		 */
-		//ÄíÅ°¿¡¼­ ·Î±×ÀÎ¿©ºÎ È®ÀÎ + ·Î±×ÀÎµÈ È¸¿ø m_idx ¹ŞÀ½
-		//·Î±×ÀÎÈ¸¿øÁ¤º¸ °¡Á®¿À±â + ¹ÙÀÎµù
+	@RequestMapping(value = { "/mypage.do" })
+	public String show(Model model, HttpServletRequest request) throws ParseException {
 		
-	
-		 int m_idx= 1; //ÀÓ½Ã·Î ·Î±×ÀÎÇÑ ¸â¹öidx=1
-		 
-		 MyPage_MemberVO m_inf;
-		 
-		 if(m_idx>=0) {
-		 m_inf = mypagedao.selectOne(m_idx); } 
-		 else { return "redirect:login.do";}
-		 //·Î±×ÀÎÆäÀÌÁö·Î ´Ù½Ã µ¹·Áº¸³»±â }
-		 
-		 model.addAttribute("m_inf", m_inf);
-	 
-		 //DB¿¡¼­ project ¸ñ·Ï °¡Á®¿À±â List<MyPage_ProjectVO> project_list =
-		 //mypagedao.selectpList(m_idx);
-		 
-		// model.addAttribute("p_list", project_list);
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		// membervoê°€ì ¸ì˜¤ê¸°
+		MyPage_MemberVO m_inf;
+		m_inf = mypagedao.selectOne(m_idx);
+		String phone = m_inf.getM_phone().substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
+		m_inf.setM_phone(phone);
+		List<MyPage_MemoBoardVO> do_list;
+		do_list = mypagedao.selecttodoList(m_idx);
+		m_inf.setTodo_cnt(do_list.size());
+		do_list = mypagedao.selectdoingList(m_idx);
+		m_inf.setDoing_cnt(do_list.size());
+		do_list = mypagedao.selectdoneList(m_idx);
+		m_inf.setDone_cnt(do_list.size());
+		model.addAttribute("m_inf", m_inf);
 
+		// DBì—ì„œ project ëª©ë¡ ê°€ì ¸ì˜¤ê¸°
+		List<MyPage_ProjectVO2> project_list = mypagedao.selectpList(m_idx);
+
+		for (int i = 0; i < project_list.size(); i++) {
+			// pj_contentsì¸ì½”ë”©
+			MyPage_ProjectVO2 vo2 = project_list.get(i);
+			vo2.setPj_contents(vo2.getPj_contents().replaceAll("<br>", "\n"));
+
+			// pj_leaderì‚½ì…
+			String pj_leader = mypagedao.select_pj_leader(vo2.getPj_idx());
+			vo2.setPj_leader(pj_leader);
+
+			// d-day ì‚½ì… ë° progress ì‚½ì…
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+			Calendar c1 = Calendar.getInstance();
+			String firstdate = format.format(c1.getTime());
+			Date firstdate2 = format.parse(firstdate);
+			Date seconddate = format.parse(vo2.getPj_ddate());
+
+			long caldday = seconddate.getTime() - firstdate2.getTime();
+			long dday = caldday / (24 * 60 * 60 * 1000);
+			if (dday > 0) {
+				vo2.setPj_dday("" + dday);
+				vo2.setPj_progress("now");
+				int res10 = mypagedao.update_pj_progress(vo2);
+			} else {
+				vo2.setPj_dday("Past Project");
+				vo2.setPj_progress("past");
+				int res11 = mypagedao.update_pj_progress(vo2);
+			} // if
+		} // for
+
+		int max_pj = 2;
+		// ë”ë³´ê¸° ê¸°ëŠ¥ì„ ìœ„í•œ..
+		if (project_list.size() >= 2) {
+			max_pj = 2; // ë³´ì—¬ì£¼ëŠ” í”„ë¡œì íŠ¸ ìµœëŒ€ max_pj+1ê°œ
+		} else {
+			max_pj = project_list.size();
+		}
+
+		model.addAttribute("p_list", project_list);
+		model.addAttribute("max_pj", max_pj);
+
+		// DBì—ì„œ ToDo ëª©ë¡ ê°€ì ¸ì˜¤ê¸° +ë°”ì¸ë”©
+		List<MyPage_MemoBoardVO> todo_list = mypagedao.selecttodoList(m_idx);
 		
+		for (int i = 0; i < todo_list.size(); i++) {
+			MyPage_MemoBoardVO vo3 = todo_list.get(i);
+			MyPage_ProjectVO pj_vo = mypagedao.selectpjnameone(vo3.getPj_idx());
+			vo3.setPj_name(pj_vo.getPj_name());
+			vo3.setB_content((vo3.getB_content().replaceAll("<br>", "\n")));
+		} // for
+
+		int max_todo = 3;
+		// ë”ë³´ê¸° ê¸°ëŠ¥ì„ ìœ„í•œ..
+		if (todo_list.size() >= 3) {
+			max_todo = 3; 
+		} else {
+			max_todo = todo_list.size();
+		}
 		
+		model.addAttribute("todo_list", todo_list);
+		model.addAttribute("max_todo", max_todo);
 		
-		//DB¿¡¼­ ToDo ¸ñ·Ï °¡Á®¿À±â +¹ÙÀÎµù
-
-		//List<MyPage_ProjectVO> todo_list = mypagedao.selectdList(m_idx);
-
-
 		return Common.MyPage.VIEW_PATH + "mypage.jsp";
 	}
-	
-	@RequestMapping(value = "/pj_create.do", method=RequestMethod.POST)
+
+	// í”Œì  ìƒì„±
+	@RequestMapping(value = "/pj_create.do", method = RequestMethod.POST)
 	@ResponseBody
-	public String pj_create(HttpServletRequest request, MyPage_ProjectVO vo) throws Exception {
+	public String pj_create(HttpServletRequest request, MyPage_ProjectVO vo, Model model) throws Exception {
+
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+
+		// pj_contentsë””ì½”ë”©
+		String pj_contents = request.getParameter("pj_contents").replaceAll("\n", "<br>");
+		String pj_ddate = request.getParameter("pj_ddate").trim();
 		vo.setPj_name(request.getParameter("pj_name"));
 		vo.setPj_open(request.getParameter("pj_open"));
 		vo.setPj_sdate(request.getParameter("pj_sdate"));
-		vo.setPj_ddate(request.getParameter("pj_ddate"));
-		vo.setPj_contents(request.getParameter("pj_contents"));
-		//À§ÀÇ Á¤º¸¸¦ DB¿¡ ±â·Ï
+		vo.setPj_ddate(pj_ddate);
+		vo.setPj_contents(pj_contents);
+		// ìœ„ì˜ ì •ë³´ë¥¼ DBì— ê¸°ë¡ ë° í”Œì ìƒì„±
 		int res = mypagedao.pj_insert(vo);
-		if(res>0) {
+
+		// ê·¸ë£¹ ë™ì‹œì— ìƒì„±
+		res = mypagedao.g_insert(m_idx);
+
+		if (res > 0) {
 			return "success";
 		} else {
 			return "fail";
 		}
+
+	}
+
+	// ë”ë³´ê¸° ë²„íŠ¼ êµ¬í˜„
+	@RequestMapping(value = "/pj_more.do", method = RequestMethod.POST)
+	public String pj_more(HttpServletRequest request, Model model) throws Exception {
+
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		MyPage_MemberVO m_inf;
+		m_inf = mypagedao.selectOne(m_idx);
+		String phone = m_inf.getM_phone().substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
+		m_inf.setM_phone(phone);
+		model.addAttribute("m_inf", m_inf);
+
+		System.out.println("ì˜í˜¸ì¶œëì–´");
+		List<MyPage_ProjectVO2> project_list = mypagedao.selectpList(m_idx);
+
+		for (int i = 0; i < project_list.size(); i++) {
+			// pj_contentsì¸ì½”ë”©
+			MyPage_ProjectVO2 vo2 = project_list.get(i);
+			vo2.setPj_contents(vo2.getPj_contents().replaceAll("<br>", "\n"));
+
+			// pj_leaderì‚½ì…
+			String pj_leader = mypagedao.select_pj_leader(vo2.getPj_idx());
+			vo2.setPj_leader(pj_leader);
+
+			// d-day ì‚½ì… ë° progress ì‚½ì…
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+			Calendar c1 = Calendar.getInstance();
+			String firstdate = format.format(c1.getTime());
+			Date firstdate2 = format.parse(firstdate);
+			Date seconddate = format.parse(vo2.getPj_ddate());
+
+			long caldday = seconddate.getTime() - firstdate2.getTime();
+			long dday = caldday / (24 * 60 * 60 * 1000);
+			if (dday > 0) {
+				vo2.setPj_dday("" + dday);
+				vo2.setPj_progress("now");
+				int res10 = mypagedao.update_pj_progress(vo2);
+			} else {
+				vo2.setPj_dday("Past Project");
+				vo2.setPj_progress("past");
+				int res11 = mypagedao.update_pj_progress(vo2);
+			} // if
+		} // for
+
+		model.addAttribute("p_list", project_list);
+
+		return Common.MyPage.VIEW_PATH + "mypage_more.jsp";
+	}
+
+	@RequestMapping(value = "/pj_filter.do", method = RequestMethod.POST)
+	public String pj_select(HttpServletRequest request, Model model) throws Exception {
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		MyPage_MemberVO m_inf;
+		m_inf = mypagedao.selectOne(m_idx);
+		String phone = m_inf.getM_phone().substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
+		m_inf.setM_phone(phone);
+		model.addAttribute("m_inf", m_inf);
+
+		System.out.println("ì˜í˜¸ì¶œëì–´");
+		List<MyPage_ProjectVO2> project_list;
+
+		String select = request.getParameter("select").trim();
+
+		if (select.equals("Now Projects")) {
+			System.out.println("NOW");
+			project_list = mypagedao.selectpList_now(m_idx);
+		} else if (select.equals("Past Projects")) {
+			System.out.println("PAST");
+			project_list = mypagedao.selectpList_past(m_idx);
+		} else {
+			System.out.println("ALL");
+			project_list = mypagedao.selectpList(m_idx);
+		}
+
+		for (int i = 0; i < project_list.size(); i++) {
+			// pj_contentsì¸ì½”ë”©
+			MyPage_ProjectVO2 vo2 = project_list.get(i);
+			vo2.setPj_contents(vo2.getPj_contents().replaceAll("<br>", "\n"));
+
+			// pj_leaderì‚½ì…
+			String pj_leader = mypagedao.select_pj_leader(vo2.getPj_idx());
+			vo2.setPj_leader(pj_leader);
+
+			// d-day ì‚½ì… ë° progress ì‚½ì…
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+			Calendar c1 = Calendar.getInstance();
+			String firstdate = format.format(c1.getTime());
+			Date firstdate2 = format.parse(firstdate);
+			Date seconddate = format.parse(vo2.getPj_ddate());
+
+			long caldday = seconddate.getTime() - firstdate2.getTime();
+			long dday = caldday / (24 * 60 * 60 * 1000);
+			if (dday > 0) {
+				vo2.setPj_dday("" + dday);
+				vo2.setPj_progress("now");
+				int res10 = mypagedao.update_pj_progress(vo2);
+			} else {
+				vo2.setPj_dday("Past Project");
+				vo2.setPj_progress("past");
+				int res11 = mypagedao.update_pj_progress(vo2);
+			} // if
+		} // for
+
+		model.addAttribute("p_list", project_list);
+
+		return Common.MyPage.VIEW_PATH + "mypage_more.jsp";
+	}
+
+	// í”„ë¡œì íŠ¸ ì‚­ì œ
+	@RequestMapping(value = "pj_delete.do", method = RequestMethod.POST)
+	@ResponseBody
+	public String pj_delete(int pj_idx) {
+
+		int res = mypagedao.pj_delete(pj_idx);
+		String result = "no";// ì‚­ì œì‹¤íŒ¨ì‹œ
+
+		if (res != 0) {
+			result = "yes";// ì‚­ì œì„±ê³µì‹œ
+		}
+
+		return result;
+	}
+
+	// í”„ë¡œì íŠ¸ íƒˆí‡´
+	@RequestMapping(value = "pj_out.do", method = RequestMethod.POST)
+	@ResponseBody
+	public String pj_out(MyPage_GroupVO vo) {
+
+		vo.setG_leader(-1);// ì„ì‹œê°’
+		vo.setG_leader(-1);// ì„ì‹œê°’
+
+		int res = mypagedao.pj_out(vo);
+		String result = "no";// íƒˆí‡´ì‹¤íŒ¨ì‹œ
+
+		if (res != 0) {
+			result = "yes";// íƒˆí‡´ì„±ê³µì‹œ
+		}
+
+		return result;
+	}
+
+	// í”Œì  ìˆ˜ì •
+	@RequestMapping(value = "/pj_update.do", method = RequestMethod.POST)
+	@ResponseBody
+	public String pj_update(HttpServletRequest request, MyPage_ProjectVO vo, Model model) throws Exception {
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		// pj_contentsë””ì½”ë”©
+		String pj_contents = request.getParameter("pj_contents").replaceAll("\n", "<br>");
+		String pj_ddate = request.getParameter("pj_ddate").trim();
+		vo.setPj_idx(Integer.parseInt(request.getParameter("pj_idx")));
+		vo.setPj_name(request.getParameter("pj_name"));
+		vo.setPj_open(request.getParameter("pj_open"));
+		vo.setPj_sdate(request.getParameter("pj_sdate"));
+		vo.setPj_ddate(pj_ddate);
+		vo.setPj_contents(pj_contents);
+		// ìœ„ì˜ ì •ë³´ë¥¼ DBì— ìˆ˜ì •
+		int res = mypagedao.pj_update(vo);
+
+		if (res > 0) {
+			return "success";
+		} else {
+			return "fail";
+		}
+
+	}
+
+	// ê·¸ë£¹ ë©¤ë²„ ëª©ë¡ ë°›ì•„ì˜¤ê¸°
+	@RequestMapping(value = "/pj_group.do", method = RequestMethod.POST)
+	public String pj_group(HttpServletRequest request, Model model) throws Exception {
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		int pj_idx = Integer.parseInt(request.getParameter("pj_idx"));
+		List<MyPage_GroupVO2> g_list = mypagedao.selectgList(pj_idx);
+		System.out.println("ê·¸ë£¹ ì˜ë“¤ê³ ì™”ì–´");
+
+		for (int i = 0; i < g_list.size(); i++) {
+			// pj_contentsì¸ì½”ë”©
+			MyPage_GroupVO2 g_vo = g_list.get(i);
+			MyPage_MemberVO m_vo = mypagedao.selectOne(g_vo.getM_idx());
+			g_vo.setM_email(m_vo.getM_email());
+			g_vo.setM_nick(m_vo.getM_nick());
+			g_list.set(i, g_vo);
+		} // for
+
+		model.addAttribute("g_list", g_list);
+
+		return Common.MyPage.VIEW_PATH + "mypage_group.jsp";
+	}
+
+	@RequestMapping(value = "/g_search.do", method = RequestMethod.POST)
+	public String g_search(HttpServletRequest request, Model model) throws Exception {
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		System.out.println("ì˜ ê²€ìƒ‰í–ˆì–´");
+		System.out.println(request.getParameter("m_email"));
+		MyPage_MemberVO m_vo = mypagedao.selectmOne(request.getParameter("m_email"));
+
+		System.out.println(m_vo.getM_nick());
+		model.addAttribute("search_vo", m_vo);
+		return Common.MyPage.VIEW_PATH + "mypage_search.jsp";
+	}
+
+	// ê·¸ë£¹ ì´ˆëŒ€í…Œì´ë¸” ìˆ˜ì •
+	@RequestMapping(value = "/g_invite.do", method = RequestMethod.POST)
+	@ResponseBody
+	public String g_invite(HttpServletRequest request, Model model, MyPage_InviteVO vo) throws Exception {
+		HttpSession session = request.getSession();
+		String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+		int m_idx= Integer.parseInt(m_idx2);
+		int send_m_idx = Integer.parseInt(request.getParameter("send_m_idx"));
+		int pj_idx = Integer.parseInt(request.getParameter("pj_idx"));
+		String[] recieve_m_idx_list = request.getParameterValues("invite_arr[]");
+		List<MyPage_GroupVO2> g_list = mypagedao.selectgList(pj_idx);
+		List<MyPage_InviteVO> in_list =mypagedao.selectinList(pj_idx);
+		//ì´ë¯¸ ê·¸ë£¹ì— ìˆëŠ”ì§€ ì—¬ë¶€ ê²€ì‚¬
+		String res = "success";
+		for (int i = 0; i < recieve_m_idx_list.length; i++) {
+			for(int j=0; j<g_list.size();j++) {
+				if(g_list.get(j).getM_idx()== Integer.parseInt(recieve_m_idx_list[i])) {
+					res="overlap";
+					break;
+				}
+			}
+		}
 		
+		for (int i = 0; i < recieve_m_idx_list.length; i++) {
+			for(int j=0; j<in_list.size();j++) {
+				if(in_list.get(j).getRecieve_m_idx()== Integer.parseInt(recieve_m_idx_list[i])) {
+					res="overlap_invite";
+					break;
+				}
+			}
+		}	
+		
+		if(res=="success") {
+			for (int i = 0; i < recieve_m_idx_list.length; i++) {
+				vo.setSend_m_idx(send_m_idx);
+				vo.setPj_idx(pj_idx);
+				vo.setRecieve_m_idx(Integer.parseInt(recieve_m_idx_list[i]));
+				System.out.println(vo.getRecieve_m_idx()+"ë‚´ê°€ë³´ë‚´ëŠ”ì‚¬ëŒ");
+				mypagedao.in_insert(vo);
+				mypagedao.in_update(Integer.parseInt(recieve_m_idx_list[i]));
+			}	
+		}
+			
+
+		return res;
+
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
+	// ê·¸ë£¹ ì´ˆëŒ€í…Œì´ë¸” ìˆ˜ì •
+		@RequestMapping(value = "/g_update.do", method = RequestMethod.POST)
+		@ResponseBody
+		public String g_update(HttpServletRequest request, Model model, MyPage_GroupVO vo) throws Exception {
+			HttpSession session = request.getSession();
+			String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+			int m_idx= Integer.parseInt(m_idx2);
+			int g_leader = Integer.parseInt(request.getParameter("g_leader"));
+			int pj_idx = Integer.parseInt(request.getParameter("pj_idx"));
+			String[] g_delete_m_idx_list = request.getParameterValues("g_update_arr[]");
+			if( g_delete_m_idx_list != null) {	
+				for (int i = 0; i < g_delete_m_idx_list.length; i++) {
+					vo.setM_idx((Integer.parseInt(g_delete_m_idx_list[i])));
+					vo.setG_leader(g_leader);
+					vo.setPj_idx(pj_idx);
+					mypagedao.g_update(vo);
+					mypagedao.g_leader_update(vo);
+				}
+			} else {
+				mypagedao.g_leader_update(vo);
+			}
+			String res ="success";
 
+			return res;
+		}
+		
+		
+		
+		
+		// todoë”ë³´ê¸° ë²„íŠ¼ êµ¬í˜„
+		@RequestMapping(value = "/todo_more.do", method = RequestMethod.POST)
+		public String todo_more(HttpServletRequest request, Model model) throws Exception {
+			HttpSession session = request.getSession();
+			String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+			int m_idx= Integer.parseInt(m_idx2);
+			MyPage_MemberVO m_inf;
+			m_inf = mypagedao.selectOne(m_idx);
+			String phone = m_inf.getM_phone().substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
+			m_inf.setM_phone(phone);
+			model.addAttribute("m_inf", m_inf);
+			
+			
+			// DBì—ì„œ ToDo ëª©ë¡ ê°€ì ¸ì˜¤ê¸° +ë°”ì¸ë”©
+			List<MyPage_MemoBoardVO> todo_list = mypagedao.selecttodoList(m_idx);
+			
+			for (int i = 0; i < todo_list.size(); i++) {
+				MyPage_MemoBoardVO vo3 = todo_list.get(i);
+				MyPage_ProjectVO pj_vo = mypagedao.selectpjnameone(vo3.getPj_idx());
+				vo3.setPj_name(pj_vo.getPj_name());
+				vo3.setB_content((vo3.getB_content().replaceAll("<br>", "\n")));
+			} // for
+
+			
+			model.addAttribute("todo_list", todo_list);
+
+
+			return Common.MyPage.VIEW_PATH + "mypage_todomore.jsp";
+		}
+		
+
+
+		@RequestMapping(value = "/do_filter.do", method = RequestMethod.POST)
+		public String do_select(HttpServletRequest request, Model model) throws Exception {
+			HttpSession session = request.getSession();
+			String m_idx2= String.valueOf(session.getAttribute("m_idx"));
+			int m_idx= Integer.parseInt(m_idx2);
+			MyPage_MemberVO m_inf;
+			m_inf = mypagedao.selectOne(m_idx);
+			String phone = m_inf.getM_phone().substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
+			m_inf.setM_phone(phone);
+			model.addAttribute("m_inf", m_inf);
+
+			System.out.println("ì˜í˜¸ì¶œëì–´");
+			List<MyPage_MemoBoardVO> do_list;
+
+			String select = request.getParameter("select").trim();
+			System.out.println(m_idx);
+			if (select.equals("To Do")) {
+				System.out.println("To Do");
+				do_list = mypagedao.selecttodoList(m_idx);
+				for (int i = 0; i < do_list.size(); i++) {
+					MyPage_MemoBoardVO vo3 = do_list.get(i);
+					MyPage_ProjectVO pj_vo = mypagedao.selectpjnameone(vo3.getPj_idx());
+					vo3.setPj_name(pj_vo.getPj_name());
+					vo3.setB_content((vo3.getB_content().replaceAll("<br>", "\n")));
+				}
+			} else if (select.equals("Doing")) {
+				System.out.println("Doing");
+				do_list = mypagedao.selectdoingList(m_idx);
+				for (int i = 0; i < do_list.size(); i++) {
+					MyPage_MemoBoardVO vo3 = do_list.get(i);
+					MyPage_ProjectVO pj_vo = mypagedao.selectpjnameone(vo3.getPj_idx());
+					vo3.setPj_name(pj_vo.getPj_name());
+					vo3.setB_content((vo3.getB_content().replaceAll("<br>", "\n")));
+				}
+			} else {
+				System.out.println("Done");
+				do_list = mypagedao.selectdoneList(m_idx);
+				for (int i = 0; i < do_list.size(); i++) {
+					MyPage_MemoBoardVO vo3 = do_list.get(i);
+					MyPage_ProjectVO pj_vo = mypagedao.selectpjnameone(vo3.getPj_idx());
+					vo3.setPj_name(pj_vo.getPj_name());
+					vo3.setB_content((vo3.getB_content().replaceAll("<br>", "\n")));
+				}
+			}
+
+
+			model.addAttribute("todo_list", do_list);
+
+			return Common.MyPage.VIEW_PATH + "mypage_doselect.jsp";
+		}
+		
+		
+		
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 

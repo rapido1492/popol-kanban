@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chatting">
+	
+	<!-- 목록 가지고 오기전. chat_idx 가져오기. -->
+	<select id="chat_idx" parameterType="int" resultType="int">
+		select chat_idx from chat_group where m_idx = #{m_idx}
+	</select> 
+	
+	<!-- 같은 채팅창에 있는 사람들의 m_idx 다 가져오기 -->
+	<select id="chat_midx_list" parameterType="int" resultType="vo.mainpage.ChattingListVO">
+		select m_idx from chat_group where chat_idx = #{chat_idx}
+	</select>
+	
+	<!-- 채팅창 목록 -->    
+    <select id="chat_all_list" resultType="vo.mainpage.ChattingListVO" parameterType="java.util.Map"> 
+        SELECT * from chat_list 
+		WHERE chat_idx IN  
+        <foreach item="item" index="index" collection="chat_idx" open="(" separator="," close=")">
+                #{item}
+        </foreach>        
+        ORDER BY new_date desc  
+    </select>
+	
+	
+	<!-- 채팅방 생성 -->
+	<insert id="chat_list_save" parameterType="vo.mainpage.ChattingListVO">
+		insert into chat_list values(
+			seq_chat_list_idx.nextVal,
+			#{color}, 
+			sysdate,
+			#{chat_name}
+		)
+	</insert>
+	
+	<!-- 채팅방 생성 후 그룹에 넣기 -->
+	<insert id="chat_group_save" parameterType="vo.mainpage.ChattingListVO">
+		insert into chat_group values(
+			seq_chat_group_idx.nextVal,
+			seq_chat_list_idx.currVal,
+			#{m_idx}
+		)
+	</insert> 
+	   
+	<!-- 대화창 리스트 -->
+	<select id="chat_list" parameterType="Integer" resultType="vo.mainpage.ChattingRoomVO">
+		select cr.*, m.m_name from chat_room cr, member m where cr.m_idx = m.m_idx AND cr.chat_idx = #{chat_idx} order by cr.chat_room_idx
+	</select>  
+     
+    <!-- 대화저장 -->     
+    <insert id="chat_content_insert" parameterType="vo.mainpage.ChattingRoomVO">
+     	insert into chat_room values(
+     		seq_chat_room_idx.nextVal,
+     		#{chat_idx},
+     		#{m_idx}, 
+     		#{chat_content},
+     		sysdate 
+     	)
+    </insert>    
+      
+    <!-- offline 업데이트 -->  
+    <update id="chat_offline" parameterType="vo.mainpage.ChattingRoomVO">
+		UPDATE chat_group
+	     SET off = 1
+	   WHERE chat_idx = #{chat_idx} AND m_idx = #{m_idx}
+	</update>
+	
+	<!-- off 체크 -->
+    <select id="chat_offcheck" parameterType="java.lang.Integer" resultType="vo.mainpage.ChattingRoomVO">
+    	select chat_idx from chat_group where m_idx=#{m_idx} AND off=1
+    </select>    
+         
+</mapper>  
+
+
+
+
+ 
+
+
+
+
+
+
+

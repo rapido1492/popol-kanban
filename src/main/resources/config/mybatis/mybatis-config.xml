@@ -6,15 +6,24 @@
 		<setting name="cacheEnabled" value="false" />
 		<setting name="useGeneratedKeys" value="true" />
 		<setting name="defaultExecutorType" value="REUSE" />
+		<setting name="returnInstanceForEmptyRow" value="true"/>
 	</settings>
-	
 
+	<!-- 창현 -->
+	<typeAliases>
+		<typeAlias type="vo.bbspage.BoardVO" alias="board" />
+		<typeAlias type="vo.bbspage.BoardReplyVO" alias="board_comment" />
+	</typeAliases>
+	
 	<mappers>
 		<mapper resource="config/mybatis/mapper/mypage/mypage.xml" />
+		<mapper resource="config/mybatis/mapper/mainpage/mainpage.xml" />
+		<mapper resource="config/mybatis/mapper/mainpage/board_move_page.xml" />
+		<mapper resource="config/mybatis/mapper/mainpage/chatting.xml" />
+		<mapper resource="config/mybatis/mapper/bbspage/board.xml" />
+		<mapper resource="config/mybatis/mapper/signup/signup.xml"/>
+		<mapper resource="config/mybatis/mapper/login/login.xml"/>
 	</mappers>
 </configuration>
-
-
-
 
 

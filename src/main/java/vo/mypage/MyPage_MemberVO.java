@@ -9,6 +9,36 @@ public class MyPage_MemberVO {
 	private String m_nick;
 	private String m_phone;
 	private String m_photo;
+	private String m_inviteflag;
+	private int todo_cnt;
+	private int doing_cnt;	
+	private int done_cnt;	
+	
+	
+	public int getTodo_cnt() {
+		return todo_cnt;
+	}
+	public void setTodo_cnt(int todo_cnt) {
+		this.todo_cnt = todo_cnt;
+	}
+	public int getDoing_cnt() {
+		return doing_cnt;
+	}
+	public void setDoing_cnt(int doing_cnt) {
+		this.doing_cnt = doing_cnt;
+	}
+	public int getDone_cnt() {
+		return done_cnt;
+	}
+	public void setDone_cnt(int done_cnt) {
+		this.done_cnt = done_cnt;
+	}
+	public String getM_inviteflag() {
+		return m_inviteflag;
+	}
+	public void setM_inviteflag(String m_inviteflag) {
+		this.m_inviteflag = m_inviteflag;
+	}
 	public int getM_idx() {
 		return m_idx;
 	}
