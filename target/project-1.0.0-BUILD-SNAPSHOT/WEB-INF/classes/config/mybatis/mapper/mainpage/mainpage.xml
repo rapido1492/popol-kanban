@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="main">
+	
+	<!-- (룸)ALl 리스트 -->
+	<select id="board_list" parameterType="int" resultType="vo.mainpage.BoardPageVO">
+		select * from memoboard where pj_idx = #{pj_idx} order by memo_seq
+	</select>
+	
+	<!-- (룸)Mine 리스트 -->
+	<select id="board_division_list" parameterType="vo.mainpage.BoardPageVO" resultType="vo.mainpage.BoardPageVO">
+		select * from memoboard where m_idx=#{m_idx} AND pj_idx = #{pj_idx} order by priority
+	</select>
+	
+	<!-- (룸)group 리스트 -->
+	<select id="group_list" parameterType="int" resultType="vo.mainpage.GroupVO">
+		select * from pj_group where pj_idx =#{pj_idx}
+	</select>
+	
+	<!-- (룸)게시판 메모 등록 -->
+	<insert id="board_insert" parameterType="vo.mainpage.BoardPageVO">
+		insert into memoboard values(
+			seq_memoboard_idx.nextVal,
+			#{pj_idx},
+			#{m_idx},
+			#{b_content},
+			sysdate,
+			#{memo_seq},
+			#{division},
+			#{priority},
+			#{subject},
+			0,
+			0,
+			0
+		)
+	</insert> 
+	 
+	<!-- (룸)메모 삭제 -->
+	<delete id="board_delete" parameterType="int">
+		delete from memoboard where b_idx=#{b_idx}
+	</delete>
+		 
+	<!-- 메모 수정 업데이트 -->
+	<update id="board_memo_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set b_content=#{b_content} where b_idx=#{b_idx}
+	</update> 
+	
+	<!-- memo_seq 구하기 -->
+	<select id="board_memo_seq_select" parameterType="vo.mainpage.BoardPageVO" resultType="Integer">
+		SELECT MAX(memo_seq) FROM memoboard where m_idx=#{m_idx} AND pj_idx=#{pj_idx}
+	</select>
+	
+
+	<!--파일 보관함 -->
+
+	<!-- 보관함 리스트 -->
+	<select id="dir_list" resultType="vo.mainpage.DirectoryVO">
+		select * from directory order by FILE_IDX desc
+	</select>
+	
+	<!-- 보관함 검색 -->
+	<select id="dir_word_list" parameterType="java.lang.String" resultType="vo.mainpage.DirectoryVO">
+		select * from directory where file_title like '%' || #{search} || '%' order by FILE_IDX desc
+	</select>
+
+	<!-- 보관함 파일 등록 -->
+	<insert id="dir_insert" parameterType="vo.mainpage.DirectoryVO">
+		insert into directory values( 
+					seq_directory_idx.nextVal, 
+					1, 
+					1, 
+					1, 
+					#{pwd}, 
+					#{file_title},
+					#{file_memory},
+					#{file_name} )
+	</insert>
+	
+	<!-- 보관함 파일 삭제. 삭제하는 척말고 -->
+	<!-- foreach 항목들
+		 collection : 전달받은 인자값.
+		 item : 전달받은 ㅇ니자값을 다른이름으로 대체.
+		 open : 해당 구문이 시작할때.
+		 close : 해당 구문이 끝날때.
+		 index : 항목의 인덱스 값을 꺼낼때 사용할 변수 이름을 지정.
+		 separator : 구분자. 한번 이상 반복할때 반복되는 사이에 해당 문을 넣어준다. -->
+	<delete id="dir_delete" parameterType="hashmap">
+		delete from directory where 
+		file_idx IN
+        <foreach collection="file_idx" item="file_idx" open="(" close=")" separator=",">
+            #{file_idx}
+        </foreach>
+	</delete>
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+

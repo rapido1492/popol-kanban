@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="memo_move">
+	
+	<!-- ALL창 메모 이동 부분 -->
+	
+	<!-- 같은 보드 이동시. 이동카드의 seq를 먼저 0으로 만들어주는 작업. 그렇게 하지 않으면 +1로 올라간다. -->
+	<update id="board_zero_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set memo_seq=0 where pj_idx=#{pj_idx} AND m_idx=#{board_after_id} AND memo_seq = #{card_before_index}
+	</update> 
+	
+ 	<!-- 메모이동 업데이트 이동하는 곳의 seq 숫자 +1 씩 --> 
+	<update id="board_plusseq_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set memo_seq = memo_seq+1 where pj_idx=#{pj_idx} AND m_idx=#{board_after_id} AND memo_seq <![CDATA[ >= ]]> #{card_after_index}
+	</update>
+	
+	<!-- fuck.. -->
+	<update id="board_plusseq0_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set memo_seq = memo_seq+1 where pj_idx=#{pj_idx} AND m_idx=#{board_after_id} AND memo_seq <![CDATA[ > ]]> #{card_after_index}
+	</update>
+	
+	<!-- 다른 보드로 이동했을때 업데이트 -->
+	<update id="board_move_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set m_idx=#{board_after_id}, memo_seq=#{card_after_index} where pj_idx=#{pj_idx} AND m_idx=#{board_before_id} AND memo_seq=#{card_before_index}
+	</update> 
+	
+	<!-- 같은 보드에서 이동했을때 seq가 0인걸 이동. -->
+	<update id="board_move0_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set memo_seq=#{card_after_index} where pj_idx=#{pj_idx} AND m_idx=#{board_before_id} AND memo_seq=0
+	</update> 
+
+	<!-- 다른 보드로 메모이동 업데이트 이동전 보드의 카드들에 seq 숫자 -1씩 -->
+	<update id="board_minusseq_update" parameterType="vo.mainpage.BoardPageVO">
+		update memoboard set memo_seq = memo_seq-1 where pj_idx=#{pj_idx} AND m_idx=#{board_before_id} AND memo_seq <![CDATA[ > ]]> #{card_before_index}
+	</update> 
+	
+	
+	
+	<!-- MINE창 메모 이동 부분 -->
+	<!-- m_idx, memo_seq 임시... 꼭 b_idx를 구해야함. -->
+	<update id="mine_board_update" parameterType="vo.mainpage.BoardDivisionVO">
+		update memoboard set division=#{division_after_id} where b_idx=#{b_idx}
+	</update> 
+
+  
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+

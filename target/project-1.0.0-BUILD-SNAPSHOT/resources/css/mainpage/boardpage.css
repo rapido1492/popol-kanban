@@ -1,0 +1,73 @@
+@charset "UTF-8";
+
+body {
+	background: linear-gradient(90deg, #f4d6de, #e0eff4);
+}
+/* 리스트 css */
+.column {
+	border: 1px solid #cecece;
+	border-radius: 5px;
+	width: 300px;
+	display:block;
+	margin-right: 30px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	height: calc(80vh);
+	box-shadow: 0 13px 26px rgba(0, 0, 0, 0.16), 0 3px 6px
+		rgba(0, 0, 0, 0.16);
+}
+
+.container-fluid {
+	margin-left: 150px;
+	margin-top: 5px;
+}
+
+.info {
+	height: 35px;
+	width: 268px;
+	background: #7C8097;
+	border-radius: 5px;
+	box-shadow: 0 10px 10px rgba(0, 0, 0, 0.08), 0 3px 6px
+		rgba(0, 0, 0, 0.10);
+}
+/* 이동 타켓 */
+.card-placeholder {
+	border: 1px dotted black;
+	margin: 0 1em 1em 0;
+	height: 50px;
+	margin-left: auto;
+	margin-right: auto;
+	/* 노란색으로 표신되는 것이 주요 포인트 */
+}
+/* 마우스 포인터을 손가락으로 변경 */
+.card:not (.no-move ) .card-header {
+	cursor: pointer;
+}
+/* 부트스트랩 3.x에는 card 클래스 컴포낸트가 없으니 제가 만들었습니다. */
+.card {
+	background: #cecece;
+	border: 1px solid white;
+	padding: 10px;
+	border-radius: 5px;
+	cursor: pointer;
+	margin: 10px 0px;
+	box-shadow: 0 10px 10px rgba(0, 0, 0, 0.08), 0 3px 6px
+		rgba(0, 0, 0, 0.10);
+}
+
+.card:hover .btn_del {
+	float: right;
+	display: block;
+}
+
+.btn_del {
+	display: none;
+	cursor: pointer;
+}
+
+.card-header {
+	border-bottom: 1px solid;
+	margin: 0px -10px;
+	padding: 5px 10px;
+	padding-top: 0px;
+}
