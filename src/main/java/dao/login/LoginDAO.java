@@ -1,8 +1,5 @@
 package dao.login;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.ibatis.session.SqlSession;
 
 import vo.sign.signupVO;

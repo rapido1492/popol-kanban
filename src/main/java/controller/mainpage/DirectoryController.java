@@ -199,12 +199,7 @@ public class DirectoryController {
 		String webPath = "/resources/upload/"; // 절대경로
 		String realPath = application.getRealPath(webPath);
 		System.out.println("realPath : " + realPath); 
-//
-//
-//		    // 파일 이름이 파라미터로 넘어오지 않으면 리다이렉트 시킨다. 
-//		    if(file_name == null || "".equals(file_name)){
-//		    	System.out.println("없음");
-//		    }else{
+
 		        // 파라미터로 받은 파일 이름.
 		        String requestFileNameAndPath = file_name;
 		         System.out.println(requestFileNameAndPath); 
@@ -262,7 +257,6 @@ public class DirectoryController {
 		            bis.close();
 		            
 				}
-//			}
 		return "aa";  
 	}
 

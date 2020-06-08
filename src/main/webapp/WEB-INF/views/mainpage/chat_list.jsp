@@ -38,7 +38,7 @@
 		// 			$(".roomlist").click(function(chat_idx) { 
 		// 				var chat_idx1 = chat_idx.value;
 		// 				alert(chat_idx1);
-		// 				location.href="/project/chat_room.do?chat_idx="+chat_idx;
+		// 				location.href="chat_room.do?chat_idx="+chat_idx;
 		// 			});
 
 	});
@@ -55,8 +55,8 @@
 
 	function roomEnter(idx) {
 		var chat_idx = idx;
-		alert(chat_idx);
-		location.href = "/project/chat_room.do?chat_idx=" + chat_idx;
+		//alert(chat_idx);
+		location.href = "chat_room.do?chat_idx=" + chat_idx;
 
 	}
 	
@@ -71,7 +71,7 @@
 		        url : "chat_room.do?chat_idx="+chat_idx,
 		        dataType : "text",
 		        error : function(){
-		            alert('통신실패!!'); 
+		            //alert('통신실패!!'); 
 		        },
 		        success : function(data){
 		            $("#contents3").html(data) ;

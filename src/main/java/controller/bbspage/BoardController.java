@@ -1,13 +1,18 @@
 package controller.bbspage;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +42,7 @@ import vo.mainpage.DirectoryVO;
 	HttpServletRequest request;
 	BoardDAO boarddaobean;
 	DirectoryVO vo;
+	HttpServletResponse response;
 	
 
 	public BoardController() {
@@ -59,8 +65,7 @@ import vo.mainpage.DirectoryVO;
 			nowPage = page;
 		}
 		
-//		  int pj_idx= (Integer) session.getAttribute("pj_idx");
-//		  System.out.println("세션pj_idx:"+pj_idx);
+	  int pj_idx= (Integer) session.getAttribute("pj_idx");
 //		 
 		// 한 페이지에서 표시되는 게시물의 시작과 끝번호를 계산
 		// 1페이지라면 1~10번 게시물까지만 보여줘야 한다.
@@ -71,13 +76,13 @@ import vo.mainpage.DirectoryVO;
 		int end = start + common.Common.Board.BLOCKLIST - 1;
 		// start와 end를 map에 저장
 		Map map = new HashMap();
-		map.put("pj_idx",21); 
+		map.put("pj_idx",pj_idx); 
 		map.put("start", start);
 		map.put("end", end);
 
 		// 게시글 전체목록 가져오기
-		List<BoardVO> list = null;
-		list = boarddaobean.selectList(map);
+		List<BoardVO> list = list = boarddaobean.selectList(map);
+
 		
 		// 전체 게시물 수 구하기
 		int row_total = boarddaobean.getRowTotal();
@@ -85,11 +90,11 @@ import vo.mainpage.DirectoryVO;
 		// 페이지 메뉴 생성하기
 		String pageMenu = Paging.getPaging("bbsboard_list.do", nowPage, row_total, common.Common.Board.BLOCKLIST,
 				common.Common.Board.BLOCKPAGE);
-
 		
 		// request 영역에 list 바인딩
 		model.addAttribute("list", list);
 		model.addAttribute("pageMenu", pageMenu);
+		
 		// 세션에 등록되어 있던 show 정보를 없앤다
 		request.getSession().removeAttribute("show");
 
@@ -101,7 +106,6 @@ import vo.mainpage.DirectoryVO;
 	@RequestMapping("/bbsboard_view.do")
 	public String view(Model model, int b_idx, int m_idx) {
 		BoardVO bvo = boarddaobean.selectOne(b_idx);	
-		DirectoryVO dvo = boarddaobean.directory_search(b_idx);
 		List<BoardReplyVO> revo = boarddaobean.replyselectList(b_idx);
 		String userNick = boarddaobean.userNickname(m_idx);
 		//게시글 작성자 프로필 사진
@@ -120,9 +124,10 @@ import vo.mainpage.DirectoryVO;
 			session.setAttribute("show", "yes");
 		}
 		
+		
+		
 		model.addAttribute("userNick", userNick);
 		model.addAttribute("m_photo", reply_m_photo);
-		model.addAttribute("dvo", dvo);
 		model.addAttribute("bvo", bvo);
 		model.addAttribute("revo", revo);
 		return common.Common.VIEW_PATH + "board_view.jsp";
@@ -138,10 +143,14 @@ import vo.mainpage.DirectoryVO;
 	// 게시글 작성
 	@RequestMapping("/bbsboard_insert.do")
 	public String insert(BoardVO vo) {
-		
 		String webPath = "/resources/upload/"; // 절대경로
-		int pj_idx= (Integer) session.getAttribute("pj_idx");
+		
 		String savePath = application.getRealPath(webPath);
+	
+		int pj_idx= (Integer) session.getAttribute("pj_idx");
+		int m_idx = (Integer)session.getAttribute("m_idx");
+		String m_nick = boarddaobean.userNickname(m_idx);
+		
 
 		// 업로드된 파일의 정보
 		MultipartFile photo = vo.getPhoto();
@@ -170,26 +179,18 @@ import vo.mainpage.DirectoryVO;
 		    }
 		      
 		}//if( !photo.isEmpty() )
-		Map vomap = new HashMap();
-		vomap.put("m_nick",vo.getM_nick());
-		vomap.put("m_idx",vo.getM_idx());
-		vomap.put("pj_idx",21);
-		vomap.put("b_content",vo.getB_content());
-		vomap.put("memo_seq",1);
-		vomap.put("division",vo.getDivision());
-		vomap.put("priority", vo.getPriority());
-		vomap.put("subject", vo.getSubject());
-		int res=boarddaobean.insert(vomap);
+		else{
+			file_name = "no_file";
+		}
 		
-		Map dvomap = new HashMap();
-		dvomap.put("pj_idx",21);
-		dvomap.put("m_idx",vo.getM_idx());
-		dvomap.put("file_name", file_name);
-		dvomap.put("file_memory", file_memory);
-		dvomap.put("file_title", vo.getSubject());
-		dvomap.put("pwd",vo.getPassword());
+		vo.setM_nick(m_nick);
+		vo.setM_idx(m_idx);
+		vo.setFilename(file_name);
+		vo.setPj_idx(pj_idx);
+		vo.setMemo_seq(1);
 		
-		int dvores = boarddaobean.directoryinsert(dvomap);
+		int res=boarddaobean.insert(vo);
+
 		// 포워딩 없이 페이지만 이동
 		return "redirect:bbsboard_list.do";
 	}
@@ -198,17 +199,12 @@ import vo.mainpage.DirectoryVO;
 	// 게시글 삭제
 	@RequestMapping("/bbsboard_del.do")
 	@ResponseBody // ajax로 하겠다는 뜻.(값으로 인식하라는 뜻. 데이터만 넘어간다.)
-	public String delete( int b_idx, int m_idx) {
-		/* BoardVO baseVO = boarddaobean.selectOne(b_idx); */
+	public String delete( int b_idx) {
 		String result = "no";
-		System.out.println("del:"+m_idx);
-		int res = boarddaobean.userSearch(m_idx);
-		if(res != 0) {
-			//삭제
-			res = boarddaobean.del_update( b_idx );
-			if(res == 1) {
-				result = "yes";
-			}
+		int m_idx = (Integer)session.getAttribute("m_idx");
+		int res = boarddaobean.del_update( b_idx );
+		if(res == 1) {
+			result = "yes";
 		}
 		return result;
 	}
@@ -271,17 +267,10 @@ import vo.mainpage.DirectoryVO;
 	@ResponseBody
 	public String commentInsert(BoardReplyVO vo, Model model) {
 		
-		// VO에 포장
-//		BoardReplyVO vo = new BoardReplyVO();	
-		vo.setB_idx(vo.getB_idx());
-		vo.setContent(vo.getContent());
-		vo.setRewriter(vo.getRewriter());
-		vo.setM_idx(vo.getM_idx());
 		String m_photo = boarddaobean.profile_search(vo.getM_idx());
-		System.out.println("댓글 m_idx"+vo.getM_idx());
+
 		vo.setFilename(m_photo);
 
-		System.out.println("댓글 m_photo:"+vo.getFilename());
 		int res = boarddaobean.coinsert(vo);
 		
 		model.addAttribute("reply", m_photo);
@@ -298,16 +287,16 @@ import vo.mainpage.DirectoryVO;
 	@RequestMapping("/modify_form.do")
 	public String modify_form( Model model, int b_idx ) {
 		BoardVO vo = boarddaobean.selectOne( b_idx ); // 수정 전 내용들이 vo에 들어간다.
-		DirectoryVO dvo = boarddaobean.directory_search(vo.getB_idx());
-		String existing_file = dvo.getFile_name();
+
 		String subject = vo.getSubject();
 		String content = vo.getB_content().replaceAll("<br>", "\n");
-//		String filename = vo.getFile_name();
+		String filename = vo.getFilename();
 		
 		vo.setSubject(subject);
 		vo.setB_content(content);
+		vo.setFile_name(filename);
 //		vo.setFilename(filename);
-		vo.setFilename(existing_file);
+//		vo.setFilename(existing_file);
 		if( vo != null ) {
 			model.addAttribute("vo", vo);
 		}
@@ -316,30 +305,49 @@ import vo.mainpage.DirectoryVO;
 	}
 	
 	@RequestMapping("/modify.do")
-	@ResponseBody
+//	@ResponseBody
 	public String modify(BoardVO bvo) {
-//		DirectoryVO dvo = boarddaobean.directory_search(bvo.getB_idx());
 		String content = bvo.getB_content().replaceAll("\n", "<br>");
-//		String new_file = dvo.getFile_name();
+		System.out.println("modifycontent"+content);
+		String webPath = "/resources/upload/"; // 절대경로
 		
-		bvo.setSubject(bvo.getSubject());
+		String savePath = application.getRealPath(webPath);
+		// 업로드된 파일의 정보
+		MultipartFile photo = bvo.getPhoto();
+		String file_name = "no_file";
+		// 업로드를 위한 이미지가 존재하는 경우
+		if( !photo.isEmpty() ) {
+			file_name = photo.getOriginalFilename(); // 업로드한 파일의 실제 파일명
+
+			File saveFile = new File(savePath, file_name); // savePath에다가 filename을 넣을것.
+					
+			if( !saveFile.exists() ) { // 경로가 존재하지 않다면.
+				saveFile.mkdirs();
+			}else {
+				// 동일파일명 중복방지
+				long time = System.currentTimeMillis();
+				file_name = String.format("%d_%s", time, file_name);
+				saveFile = new File(savePath, file_name);
+			}
+			try {
+				photo.transferTo(saveFile); // 업로드 파일에 saveFile이라는 껍데기 입힘
+				} catch (IOException e) {
+				 e.printStackTrace();
+				    return null;
+				}
+				      
+				}//if( !photo.isEmpty() )
+				else{
+					file_name = "no_file";
+				}
+	
 		bvo.setB_content(content);
 		bvo.setMemo_seq(1);
-		bvo.setPriority(bvo.getPriority());
-		bvo.setDivision(bvo.getDivision());
-		
-//		int modify_fileres = boarddaobean.modify_filename(bvo.getB_idx(), new_file);
-//		System.out.println(modify_fileres);
-		
-		String result = "no";
-		
+		bvo.setFilename(file_name);
 		int res = boarddaobean.modify_update(bvo);
 		
-		if( res != 0) {
-			result = "yes"; // 수정 성공시
-		}
 		
-		return result;
+		return "redirect:bbsboard_list.do";
 	}
 	
 	/*
@@ -400,6 +408,89 @@ import vo.mainpage.DirectoryVO;
 		
 		return common.Common.VIEW_PATH + "board_calendar.jsp";
 	}
+	
+	@RequestMapping("/search.do")
+	public String search(HttpServletRequest req, Model model) {
+		
+		String search_type = req.getParameter("search_value");
+		
+		String keyword = req.getParameter("keyword");
+		List<BoardVO> search_list = boarddaobean.board_search(search_type, keyword);
+		
+		model.addAttribute("list", search_list);
+		return common.Common.VIEW_PATH + "board_list.jsp";
+	}
+	
+	@RequestMapping("/download.do")
+	public String download(String file_name) throws IOException {
+
+		//업로드한 파일이 있는 경로
+		String webPath = "/resources/upload/"; // 절대경로
+		String realPath = application.getRealPath(webPath);
+		System.out.println("realPath : " + realPath); 
+
+		        // 파라미터로 받은 파일 이름.
+		        String requestFileNameAndPath = file_name;
+		         System.out.println(requestFileNameAndPath); 
+		        // 서버에서 파일찾기 위해 필요한 파일이름(경로를 포함하고 있음)
+		        // 한글 이름의 파일도 찾을 수 있도록 하기 위해서 문자셋 지정해서 한글로 바꾼다.
+		        String UTF8FileNameAndPath = new String(requestFileNameAndPath.getBytes("8859_1"), "UTF-8");
+		         
+		        // 파일이름에서 path는 잘라내고 파일명만 추출한다.
+//		            String UTF8FileName = UTF8FileNameAndPath.substring(UTF8FileNameAndPath.lastIndexOf("/") + 1).substring(UTF8FileNameAndPath.lastIndexOf(File.separator) + 1);
+		         
+		        // 브라우저가 IE인지 확인할 플래그.
+//		            boolean MSIE = request.getHeader("user-agent").indexOf("MSIE") != -1;
+		         
+		        // 파일 다운로드 시 받을 때 저장될 파일명
+		        String fileNameToSave = requestFileNameAndPath;
+		     
+		        // IE,FF 각각 다르게 파일이름을 적용해서 구분해주어야 한다.
+		       /*if(MSIE){
+		            // 브라우저가 IE일 경우 저장될 파일 이름
+		            // 공백이 '+'로 인코딩된것을 다시 공백으로 바꿔준다.
+		            fileNameToSave = URLEncoder.encode(UTF8FileName, "UTF8").replaceAll("\\+", " ");
+		        }else{
+		            // 브라우저가 IE가 아닐 경우 저장될 파일 이름
+		            fileNameToSave = new String(UTF8FileName.getBytes("UTF-8"), "8859_1");
+		        }*/
+		     
+		        // 파일이 바로 실행되지 않고 다운로드가 되게 하기 위해서 컨텐트 타입을 8비트 바이너리로 설정한다.
+		        response.setContentType("application/octet-stream, charset=utf-8");
+		        
+		        response.setHeader("Content-Transfer-Encoding", "binary");
+		         
+		        // 저장될 파일명을 지정한다.
+		        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileNameToSave + "\";");
+		         
+		        // 파일패스 및 파일명을 지정한다.
+		        //  String filePathAndName = pageContext.getServletContext().getRealPath("/") + UTF8FileNameAndPath;
+		        String filePathAndName = realPath + UTF8FileNameAndPath;
+		        File file = new File(filePathAndName);
+		         
+		        // 버퍼 크기 설정
+		        byte bytestream[] = new byte[2048000];
+		     
+		        // response out에 파일 내용을 출력한다.
+		        if (file.isFile() && file.length() > 0){
+		             
+		            FileInputStream fis = new FileInputStream(file);
+		            BufferedInputStream bis = new BufferedInputStream(fis);
+		            BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream());
+		                 
+		            int read = 0;
+		                 
+		            while ((read = bis.read(bytestream)) != -1){
+		                bos.write(bytestream , 0, read);
+		            }
+		             
+		            bos.close();
+		            bis.close();
+		            
+				}
+		        return filePathAndName;
+		}
+
 }
 
 

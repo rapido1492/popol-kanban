@@ -86,9 +86,6 @@
 			      	<input type="password" name="password" placeholder="파일 패스워드를 입력해주세요"/>
 			      </div>
 	      		<div>
-			      	<%-- <input type="hidden" name="pj_idx" value="${vo.pj_idx}"/> --%>
-			      	<input type="hidden" name="m_idx" value="${m_idx}"/>
-			      	<input type="hidden" name="m_idx" value="${pj_idx}"/>
 			      </div>	 
 				    <button type="button" class="btn btn-primary" onclick="send_check(this.form);">작성</button>
 					<button type="button" class="btn btn-danger" onclick="location.href='bbsboard_list.do'">취소</button>					 

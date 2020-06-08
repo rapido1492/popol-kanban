@@ -112,7 +112,7 @@ $( ".column .card" ).disableSelection();
 				
 				alert("프로젝트를 삭제하였습니다.");
 				
-				location.href="/project/mypage.do";
+				location.href="mypage.do";
 				
 			}
 	}
@@ -147,7 +147,7 @@ $( ".column .card" ).disableSelection();
 				
 				alert("해당 프로젝트에서 탈퇴하였습니다.");
 				
-				location.href="/project/mypage.do";
+				location.href="mypage.do";
 				
 			}
 	}
@@ -200,7 +200,7 @@ $( ".column .card" ).disableSelection();
 				
 				$.ajax({
 					type:"POST",
-					url:"/project/pj_update.do",
+					url:"pj_update.do",
 					data:{"pj_idx" : $('#pj_idx2').val(),
 						"pj_name" : $('#pj_name2').val(),
 						  "pj_open" : $('#pj_open2').val(),
@@ -234,7 +234,7 @@ $( ".column .card" ).disableSelection();
   	    	
   			$.ajax({
   				type:"POST",
-  				url:"/project/pj_filter.do",
+  				url:"pj_filter.do",
   				data : {"select" : selected_project},	
   				success: function(data){
   				    $("#pj_list_container").html(data) ;
@@ -246,7 +246,7 @@ $( ".column .card" ).disableSelection();
    	     });
   	  });
  	   
-      <!-- Doing필터링  -->
+     <!-- Doing필터링  --> 
  	var selected_do = "To Do";   
 	   jQuery(document).ready(function() {
 	      $("#do_select").on("click", "li", function() {
@@ -254,7 +254,7 @@ $( ".column .card" ).disableSelection();
 	    	document.getElementById("selected_do").innerHTML=selected_do;
   			$.ajax({
   				type:"POST",
-  				url:"/project/do_filter.do",
+  				url:"do_filter.do",
   				data : {"select" : selected_do},	
   				success: function(data){
   				    $("#todocontainer").html(data) ;
@@ -304,7 +304,7 @@ $(document).ready(function(){
 		
 		$.ajax({
 			type:"POST",
-			url:"/project/pj_create.do",
+			url:"pj_create.do",
 			data:{"pj_name" : $('#pj_name').val(),
 				  "pj_open" : $('#pj_open').val(),
 				  "pj_sdate" : $('#pj_sdate').val(),
@@ -331,7 +331,7 @@ $(document).ready(function(){
 		
 		$.ajax({
 			type:"POST",
-			url:"/project/pj_more.do",
+			url:"pj_more.do",
 			dataType:"text",	
 			success: function(data){
 			    $("#pj_list_container").html(data) ;
@@ -352,7 +352,7 @@ $(document).ready(function(){
 		
 		$.ajax({
 			type:"POST",
-			url:"/project/todo_more.do",
+			url:"todo_more.do",
 			dataType:"text",	
 			success: function(data){
 			    $("#todocontainer").html(data) ;
@@ -378,7 +378,7 @@ function pj_group_update(pj_leader, pj_idx){
 	
 	$.ajax({
 		type:"POST",
-		url:"/project/pj_group.do",
+		url:"pj_group.do",
 		data:{"pj_idx" : pj_idx
 		},		
 		success: function(data){	
@@ -413,7 +413,7 @@ $(document).ready( function() {
         var pj_idx = $("#pj_idx2").val();
 		$.ajax({
 			type:"POST",
-			url:"/project/g_update.do",
+			url:"g_update.do",
 			data:{"g_update_arr" : g_update_arr,
 				 "g_leader" : g_leader,
 				 "pj_idx" : pj_idx
@@ -449,7 +449,7 @@ $(document).ready(function(){
 	$('#g_search4').click(function(){
 		$.ajax({
 			type:"POST",
-			url:"/project/g_search.do",
+			url:"g_search.do",
 			data:{"m_email" : $('#g_search3').val()
 			},			
 			success: function(data){
@@ -480,7 +480,7 @@ $(document).ready( function() {
         
 		$.ajax({
 			type:"POST",
-			url:"/project/g_invite.do",
+			url:"g_invite.do",
 			data:{"invite_arr" : invite_arr,
 				"send_m_idx" : $('#m_idx3').val(),
 				"pj_idx" : $('#pj_idx3').val()
@@ -605,7 +605,7 @@ $(document).ready( function() {
 			 	<!-- 플젝이 없을경우  -->
 				<c:if test="${empty p_list}">
 					<div class='newsfeed_articlecontainer__article' id="no_pj">
-						<div class='article_title' onclick="location.href='/project/board.do?pj_idx=${pj_vo.pj_idx}'">
+						<div class='article_title' onclick="location.href='board.do?pj_idx=${pj_vo.pj_idx}'">
 							<h1> 참여한 프로젝트가 없습니다.</h1>
 							<h1> 밑에 버튼을 눌러 프로젝트를 생성해주세요.</h1>
 						</div>
@@ -643,7 +643,7 @@ $(document).ready( function() {
 								</div>
 							</c:otherwise>
 						</c:choose>
-						<div class='article_title' onclick="location.href='/project/board.do?pj_idx=${pj_vo.pj_idx}'">
+						<div class='article_title' onclick="location.href='board.do?pj_idx=${pj_vo.pj_idx}'">
 							<h1>${pj_vo.pj_name} / <span>${pj_vo.pj_leader}</span>
 							</h1>
 						</div>

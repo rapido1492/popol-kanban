@@ -156,7 +156,7 @@ if(page == "all"){
 		</div> MINE	
 
 <!-- <button onclick="switch_btn();">스위치 버튼 </button>	 -->
-		<button class="bbs" onclick="location.href='/project/bbsboard_list.do'">게시판으로 이동</button>
+		<button class="bbs" onclick="location.href='bbsboard_list.do'">게시판으로 이동</button>
 	<div in="alarm"></div>
 	
 	<input type="hidden" id="page" value="${page}"/>

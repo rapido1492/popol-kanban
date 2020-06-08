@@ -23,7 +23,6 @@
 		function send_check(form) {
 			var form = document.form;
 			
-			alert(form.existing_file.value);
 			if(form.subject.value.trim() == '') {
 				alert("제목을 입력해야 합니다.");
 				form.subject.focus();
@@ -45,37 +44,15 @@
 				alert("분류를 선택해주세요");
 				return;
 			}
-/* 			
-			if(form.password.value == 0) {
-				form.password.value="0000";
-			} */
-			var url="modify.do?b_idx=" + form.b_idx.value +"&subject="+ form.subject.value +"&priority="+ form.priority.value +
-			"&division="+ form.division.value  + "&b_content=" + encodeURIComponent(form.b_content.value);
-			/* + "&file_name=" + form.photo.value; */
-			sendRequest( url, null, resultFn, "POST");
+			form.submit();
 		}
 		
-		function resultFn() {
-			if( xhr.readyState==4 && xhr.status==200 ) {
-				var data = xhr.responseText;
-				//[{'result':'yes'}]
-				//var json = eval(data);
-				if( data=='yes' ) {
-					location.href="bbsboard_view.do?b_idx=${param.b_idx}"+"&m_idx=" + ${m_idx};
-				}
-				else{
-					alert("댓글등록 실패");
-					return;
-				}
-			}
-		}
 		</script>
 	</head>
 	<body>
 		 <form method="post" action="modify.do" name="form" 
             enctype="multipart/form-data">
                 <input type="hidden" name="b_idx" value="${vo.b_idx}"/>
-   				<input type="hidden" name="existing_file" value="${vo.filename}"/>
 			<div class="container">
 			      <div class="form-group">
 				       <label for="subject">제목</label>
@@ -102,16 +79,19 @@
 				        <textarea class="form-control" name="b_content" rows="3">${vo.b_content }</textarea>
 			      </div>
 			      <!-- 추후 추가 예정 -->
-<%-- 			      <div>
-			      	<c:if test="${vo.file_name} != null">
-			      		<input type="file" value="${vo.file_name }" name="photo">
-			      	</c:if>	
-				      <div class="form-group">
-				      	<input id="photo" type="file" value="${vo.filename}" name="photo"/> 
+			      <div class="form-group">
+			      <c:choose>
+			      	<c:when test="${vo.filename ne 'no_file'}">
+			      		<input type="file" value="${vo.filename }" name="photo" id="photo">
+			      		<input type="hidden" name="existing_file" value="${vo.filename}"/>
+			      	</c:when>	
+				     <c:when test="${vo.filename eq 'no_file'}">
+				      	<input id="photo" type="file"  name="photo"/> 
 				      	<input type="password" name="password" placeholder="파일 패스워드를 입력해주세요"/>
-				      </div>
-			      </div> --%>
-				    <button type="button" class="btn btn-primary" onclick="send_check(this.form);">작성</button>
+				     </c:when>
+					</c:choose>
+			      </div>
+				    <button type="button" class="btn btn-primary" onclick="send_check();">작성</button>
 					<button type="button" class="btn btn-danger" onclick="location.href='bbsboard_list.do?page=${param.page}'">취소</button>
 			  </div>
 		</form>

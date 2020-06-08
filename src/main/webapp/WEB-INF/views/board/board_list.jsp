@@ -23,16 +23,6 @@
 		<!-- 합쳐지고 최소화된 최신 자바스크립트 -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
 		
-		<script type="text/javascript">
-		$(function(){
-			$('#btnSearch').click(function() {
-				var search_select = $('#search').val();
-				var keyword = $("#keyword").val();
-				alert(keyword);
-				alert(search_select);
-			});
-		});
-		</script>
 	</head>
 	
 	<body>
@@ -71,13 +61,13 @@
 					</td>
 					<!-- 우선순위 -->
 					<td>
-						<c:if test="${vo.priority eq '1' }">
+						<c:if test="${vo.priority eq '3' }">
 							<button type="button" class="btn btn-danger">높음</button>
 						</c:if>
 						<c:if test="${vo.priority eq '2' }">
 							<button type="button" class="btn btn-warning">중간</button>
 						</c:if>
-						<c:if test="${vo.priority eq '3' }">
+						<c:if test="${vo.priority eq '1' }">
 							<button type="button" class="btn btn-success">낮음</button>
 						</c:if>
 					</td>
@@ -111,20 +101,21 @@
 	</table>
 	${pageMenu}
 	<div class="form-group row justify-content-center">
-		<form action="">
-<!-- 			<div class="w10" style="padding-right:10px">
-				<select class="selectpicker" id="search">
+		<form action="search.do" method="post">
+			<div class="w10" style="padding-right:10px">
+				<select id="search_value" name="search_value">
+					<option value="all">제목+본문</option>
 					<option value="subject">제목</option>
 					<option value="content">본문</option>
-					<option value="writer">작성자</option>
+					<option value="writer">닉네임</option>
 				</select>
-			</div> -->
-<!-- 			<div class="w300" style="padding-right:10px">
+			</div>
+			<div class="w300" style="padding-right:10px">
 				<input type="text" name="keyword" id="keyword">
 			</div>
 			<div>
-				<button class="btn btn-sm btn-primary" name="btnSearch" id="btnSearch" onclick="search(this.form);">검색</button>
-			</div> -->
+				<button class="btn btn-sm btn-primary" name="btnSearch" id="btnSearch" onclick="location.href='search.do'">검색</button>
+			</div>
 		  </form>
 		  <br />
 		  	<button type="button" class="btn btn-primary" onclick="location.href='bbsboard_insert_form.do'">등록</button>

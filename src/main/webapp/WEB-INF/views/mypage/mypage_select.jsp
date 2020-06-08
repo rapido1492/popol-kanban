@@ -10,7 +10,7 @@
 <body>
 				<c:if test="${empty p_list}">
 					<div class='newsfeed_articlecontainer__article' id="no_pj">
-						<div class='article_title' onclick="location.href='/project/board.do?pj_idx=${pj_vo.pj_idx}'">
+						<div class='article_title' onclick="location.href='board.do?pj_idx=${pj_vo.pj_idx}'">
 					 		<h1> 참여한 프로젝트가 없습니다.</h1>
 							<h1> 밑에 버튼을 눌러 프로젝트를 생성해주세요.</h1>
 						</div>
@@ -49,7 +49,7 @@
 								</div>
 							</c:otherwise> 
 						</c:choose>
-						<div class='article_title' onclick="location.href='/project/board.do?pj_idx=${pj_vo.pj_idx}'">
+						<div class='article_title' onclick="location.href='board.do?pj_idx=${pj_vo.pj_idx}'">
 							<h1>${pj_vo.pj_name} / <span>${pj_vo.pj_leader}</span>
 							</h1>
 						</div>

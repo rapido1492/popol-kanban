@@ -6,7 +6,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <mapper namespace="board">
 	
 	<!-- 새 글 등록하기 -->
-	<insert id="board_insert" parameterType="java.util.Map">
+	<insert id="board_insert" parameterType="board">
 		insert into memoboard values(
 			seq_memoboard_idx.nextVal,
 			#{pj_idx},
@@ -15,11 +15,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			sysdate,
 			#{memo_seq},
 			#{division},
-			#{priority},
 			#{subject},
+			#{priority},
 			0,
 			seq_memoboard_idx.currVal,
-			0
+			0,
+			#{m_nick},
+			#{filename}
 		)
 	</insert>
 	
@@ -28,21 +30,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			seq_BOARDREPLY_idx.nextVal,
 			#{b_idx},
 			#{rewriter},
-			#{content},
 			sysdate,
 			#{filename},
-			#{m_idx}
+			#{m_idx},
+			#{content}
 		)
 	</insert>
 	
 	<!-- idx에 해당하는 게시글 한 건 조회 -->
 	<select id="board_one" parameterType="int" resultType="board">
-		select * from memoboardview where b_idx=#{b_idx}
+		select * from memoboard where b_idx=#{b_idx}
 	</select>
 	
 	<!-- 댓글 리스트 -->
 	<select id="board_replylist" parameterType="int" resultType="board_comment">
-		select * from boardreply where reidx= #{b_idx}
+		select * from boardreply where b_idx= #{b_idx}
 	</select>
 	
 	<!-- 조회수 증가 -->
@@ -85,7 +87,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	<!-- 삭제 전 프로젝트 리더 조회 -->
 	<select id="board_leaderSearch" parameterType="int" resultType="int">
-		select NVL(g_leader,0) from pj_group where m_idx=#{m_idx}
+		select g_leader from pj_group where g_leader=#{m_idx}
 	</select>
 	
 	<!-- 게시글 삭제 -->	
@@ -97,19 +99,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="board_list_condition" parameterType="java.util.Map" resultType="board">
 		select * from 
 		( select rank() over(order by ref desc, step asc) no, 
-		b.*  from (select * from memoboardview where pj_idx=#{pj_idx}) b ) 
+		b.*  from (select * from memoboard where pj_idx=#{pj_idx}) b ) 
 		where no between #{start} and #{end}
 	</select>
 	
 	<!-- 전체 게시물 수 조회 -->
 	<select id="board_count" resultType="int">
-		select count(*) from memoboardview
+		select count(*) from memoboard
 	</select>
 	
 	<!-- 글 수정 -->
 	<update id="board_modifyupdate" parameterType="board">
 		update memoboard set subject=#{subject}, b_content=#{b_content}, memo_seq=#{memo_seq}, priority=#{priority}, division=#{division}, 
-		b_date=sysdate where b_idx=#{b_idx}
+		b_date=sysdate, filename=#{filename} where b_idx=#{b_idx}
 	</update>
 	
 	<!-- 글에 첨부된 파일 수정 -->
@@ -118,12 +120,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</update>
 	
 	<!-- 파일 directory에 insert -->
-	<insert id="directory_insert" parameterType="java.util.Map" useGeneratedKeys="true">
+<!-- 	<insert id="directory_insert" parameterType="hashmap" useGeneratedKeys="true">
 			<selectKey keyProperty="b_idx" resultType="int" order="BEFORE"> 
 				SELECT seq_memoboard_idx.nextVal from dual
 			</selectKey>
 			insert into directory values( 
-				seq_directory_idx.nextVal, 
 				#{pj_idx}, 
 				#{b_idx}, 
 				#{m_idx}, 
@@ -132,7 +133,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 				#{file_memory},
 				#{file_name} 
 			)
-	</insert>
+	</insert> -->
 	
 	<!-- view 파일 서치 -->	
 	<select id="directory_search" parameterType="int" resultType="vo.mainpage.DirectoryVO">
@@ -187,6 +188,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<update id="invite_result" parameterType="int">
 		update pj_invite set in_result='true' where in_idx=#{in_idx}
 	</update>
+	
+	<select id="search_subject" parameterType="java.lang.String"
+		resultType="board">
+		SELECT * FROM memoboard
+		WHERE subject LIKE '%'||#{SearchValue}||'%'
+	</select>
+
+	<select id="search_content" parameterType="java.lang.String"
+		resultType="board">
+		SELECT * FROM memoboard
+		WHERE b_content LIKE '%'||#{SearchValue}||'%'
+	</select>
+	
+	<select id="search_writer" parameterType="java.lang.String"
+		resultType="board">
+		SELECT * FROM memoboard
+		WHERE m_nick LIKE '%'||#{SearchValue}||'%'
+	</select>
+
+	<select id="search_all" parameterType="java.lang.String"
+		resultType="board">
+		SELECT * FROM memoboard
+		WHERE subject LIKE '%'||#{SearchValue}||'%'
+		OR b_content LIKE '%'||#{SearchValue}||'%'
+	</select>
 	
 </mapper>
 

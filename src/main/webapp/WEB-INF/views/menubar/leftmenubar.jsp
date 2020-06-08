@@ -50,7 +50,7 @@ $(document).ready(function () {
 		        url : "chat_list.do",
 		        dataType : "text",
 		        error : function(){
-		            alert('통신실패!!'); 
+		            //alert('통신실패!!'); 
 		        },
 		        success : function(data){
 		            $("#chat_list").html(data) ;
@@ -78,7 +78,7 @@ $(document).ready(function () {
 	        url : "chat_offCheck.do?m_idx="+<%= session.getAttribute("m_idx")%>,
 	        dataType : "text",
 	        error : function(){
-	            alert('통신실패!!');  
+	            //alert('통신실패!!');  
 	        },
 	        success : function(text){
 	            if(text == 1){
@@ -130,7 +130,7 @@ ws.onmessage=function onMessage(event){
 	        url : "chat_offCheck.do?m_idx="+<%= session.getAttribute("m_idx")%>,
 	        dataType : "text",
 	        error : function(){
-	            alert('통신실패!!');  
+	            //alert('통신실패!!');  
 	        },
 	        success : function(text){
 	            if(text == 1){

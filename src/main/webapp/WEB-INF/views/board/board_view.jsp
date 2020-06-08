@@ -80,6 +80,15 @@
 					}
 				}
 			}
+			function download(){
+
+				var filename = $("#filename").text();
+
+				var url = "download.do?file_name="+encodeURIComponent(filename);
+
+				 location.href=url;
+
+				}
 		</script>
 </head>
 
@@ -92,7 +101,7 @@
 				<!-- Title -->
 					<h1 class="mt-4">Title: ${bvo.subject }</h1>
 					<!-- Author -->
-					<c:if test="${bvo.file_name != 'no_file'}">
+					<c:if test="${bvo.file_name ne 'no_file'}">
 						<img class="img-circle" src="resources/upload/${bvo.file_name }" width="64" height="64"/>
 					</c:if>
 					Writed by ${bvo.m_nick} 
@@ -108,8 +117,8 @@
 					<p class="lead">${bvo.b_content }
 					<br />
 					<!-- 첨부된 이미지가 있을때만 img태그를 사용 -->
-						<c:if test="${dvo.file_name ne 'no_file'}">
-							<img alt="${bvo.m_nick}  의 사진" src="resources/upload/${dvo.file_name}" width="200"/>
+						<c:if test="${bvo.file_name ne 'no_file'}">
+							<img alt="${bvo.m_nick}  의 사진" src="resources/upload/${bvo.filename}" width="200"/>
 						</c:if>
 					</p>
 					<hr style="border: solid 0.5px gray;">
@@ -118,15 +127,16 @@
  					<!-- <button type="button" class="btn btn-info" onclick="reply();">답글달기</button> -->
  					<button type="button" class="btn btn-warning" onclick="location.href='modify_form.do?b_idx=${bvo.b_idx}'">수정</button>
 					<button type="submit" class="btn btn-danger" onclick="del();">삭제</button>
-				
+					<div>
+						<a href="download.do?file_name=${bvo.file_name}">${bvo.file_name}</a>
+					</div>
 					<div class="media mb-4">
 						<c:forEach var="re" items="${revo}">
 						<div class="media-body">
-						<c:if test="${re.filename ne 'no_file' }">
-							<img class="img-circle" alt="${userNick} 의 사진" src="resources/upload/${re.filename}"  width="64" height="64"/>
+						<c:if test="${re.filename ne 'no_file'}">
+							<img class="img-circle" alt="${re.rewriter} 의 사진" src="resources/upload/${re.filename}"  width="64" height="64"/>
 							<h5 class="mt-0">작성자: ${re.rewriter }</h5>
 						</c:if>
-							
 							${re.content }
 						</div>
 						<br />
@@ -155,9 +165,9 @@
 	<footer class="py-5 bg-dark">
 		<div class="container">
 			<div class=".col">
-			<p class="m-0 text-center text-white">Copyright &copy; LJLR
-				Website 2019</p>
-		</div>
+				<p class="m-0 text-center text-white">Copyright &copy; LJLR
+					Website 2019</p>
+			</div>
 		</div>
 		<!-- /.container -->
 	</footer>

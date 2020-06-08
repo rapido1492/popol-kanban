@@ -69,7 +69,7 @@ public class MyPageController {
 		// membervo가져오기
 		MyPage_MemberVO m_inf;
 		m_inf = mypagedao.selectOne(m_idx);
-		String phone = m_inf.getM_phone().substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
+		String phone = m_inf.getM_phone();//.substring(0, 3)+'-'+m_inf.getM_phone().substring(3, 7)+'-'+m_inf.getM_phone().substring(7, 11);
 		m_inf.setM_phone(phone);
 		List<MyPage_MemoBoardVO> do_list;
 		do_list = mypagedao.selecttodoList(m_idx);

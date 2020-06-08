@@ -146,19 +146,12 @@
 		
 	}//resultFn()
 	
-	function idcheck() {
-		
-		alert("이메일 중복 체크를 해주세요");
-		
-		return;
-		
-	}
 	</script>
 
 </head>
 <body>
 
-    <form class="signup-form" method="POST" enctype="multipart/form-data">
+    <form class="signup_insert.do" method="POST" enctype="multipart/form-data">
 
 	<input type="hidden" name="m_idx" value="${ vo.m_idx }" >
       <!-- form header -->
@@ -184,7 +177,7 @@
         <!-- Email -->
         <div class="form-group">
           <label for="email" class="label-title">Email*</label>
-          <input type="email" name="m_email" class="form-input" placeholder="enter your email" required="required" value="${vo.m_email }">
+          <input type="email" name="m_email" class="form-input" placeholder="enter your email" value="${vo.m_email }">
           <input type="button" value="Email 중복 확인" onclick="emailcheck();">
         </div>
 

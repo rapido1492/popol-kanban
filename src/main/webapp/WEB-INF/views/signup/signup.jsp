@@ -28,7 +28,7 @@
     	
     	var test_name =	/^[ㄱ-ㅎ|가-힣|a-z|A-Z|\*]+$/
     	var test_email = /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i;
-		var test_pwd = /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,12}/;
+//		var test_pwd = /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,12}/;
 		var test_phone = /^[0-9]+$/;
     	
 		if(m_nick ==""){
@@ -59,10 +59,10 @@
 			return;
 		}
 		
-		if(test_pwd.test(m_pwd) == false ){
+/* 		if(test_pwd.test(m_pwd) == false ){
 			alert("pwd는 6 ~ 12자리의 영문, 숫자를 반드시 포함하여 만들어주세요.");
 			return;
-		}
+		} */
 		
 		if(document.getElementById("confirm-password").value == "" ){
 			alert("confirm-password가 입력되지 않았습니다.");

@@ -10,7 +10,6 @@ import vo.bbspage.BoardReplyVO;
 import vo.bbspage.BoardVO;
 import vo.bbspage.InviteVO;
 import vo.mainpage.DirectoryVO;
-import vo.sign.signupVO;
 
 public class BoardDAO {
 	SqlSession sqlSession;
@@ -28,8 +27,8 @@ public class BoardDAO {
 	}
 	
 	//글 등록
-	public int insert(Map map) {
-		int res = sqlSession.insert("board.board_insert",map);
+	public int insert(BoardVO vo) {
+		int res = sqlSession.insert("board.board_insert",vo);
 		return res;
 	}
 		
@@ -48,8 +47,7 @@ public class BoardDAO {
 	
 	//클릭한 게시글 한건 조회하기
 	public BoardVO selectOne(int b_idx) {
-		BoardVO vo = null;
-		vo = sqlSession.selectOne("board.board_one",b_idx);
+		BoardVO vo = sqlSession.selectOne("board.board_one",b_idx);
 		return vo;
 	}
 	
@@ -80,8 +78,8 @@ public class BoardDAO {
 	
 	//글 삭제 전 유저가 리더인지 체크
 	public int userSearch(int m_idx) {
-		Integer res = 0;
-		res = sqlSession.selectOne("board.board_leaderSearch", m_idx);
+		int res = sqlSession.selectOne("board.board_leaderSearch", m_idx);
+		
 		return res;
 	}
 	//글 삭제
@@ -147,14 +145,14 @@ public class BoardDAO {
 	//유저 프로필 사진 조회
 	public String profile_search(int m_idx) {
 		String res = null;
-		res = sqlSession.selectOne("profile_search",m_idx);
+		res = sqlSession.selectOne("board.profile_search",m_idx);
 		System.out.println("유저 프로필 사진:"+res);
 		return res;
 	}
 	//유저 닉네임 조회
 	public String userNickname(int m_idx) {
 		String res = null;
-		res = sqlSession.selectOne("userNickname", m_idx);
+		res = sqlSession.selectOne("board.userNickname", m_idx);
 		return res;
 	}
 	
@@ -177,7 +175,28 @@ public class BoardDAO {
 	//projectName 조회
 	public String project_search(int pj_idx) {
 		String res = null;
-		res = sqlSession.selectOne("project_search", pj_idx);
+		res = sqlSession.selectOne("board.project_search", pj_idx);
 		return res;
+	}
+	
+	public List<BoardVO> board_search(String Searchtype, String SearchValue) {		
+		List<BoardVO> board_list = null;
+		
+		if( Searchtype.equals("subject")) {
+			board_list = sqlSession.selectList("board.search_subject", SearchValue);
+		}
+		else if( Searchtype.equals("content") ) {
+			board_list = sqlSession.selectList("board.search_content", SearchValue);
+		}
+		
+		else if( Searchtype.equals("writer") ) {
+			board_list = sqlSession.selectList("board.search_writer", SearchValue);
+		}
+		
+		else if( Searchtype.equals("all") ) {
+			board_list = sqlSession.selectList("board.search_all", SearchValue);
+		}
+		
+		return board_list;
 	}
 }

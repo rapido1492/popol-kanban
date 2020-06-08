@@ -54,14 +54,12 @@ public class SignUpController {
 		
 		model.addAttribute("vo", vo);
 		
-		System.out.println( org.springframework.core.SpringVersion.getVersion() ); 
 		return Common.signupPage.VIEW_PATH + "signchange.jsp";
 		
 	}
 	@RequestMapping("/pwdsearch_form.do")
 	public String pwd_search() {
 		
-		System.out.println( org.springframework.core.SpringVersion.getVersion() ); 
 		return Common.signupPage.VIEW_PATH + "pwd_search.jsp";
 		
 	}
@@ -78,8 +76,7 @@ public class SignUpController {
 		}
 		else if(vo.getPhoto().isEmpty()){
 			
-			vo.setM_photo("빈값");
-			
+			vo.setM_photo("no_file");
 		}
 		
 		int res = signupdao.signup(vo);

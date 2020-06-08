@@ -25,6 +25,8 @@ public class BoardVO {
 	private String file_title;
 	private String file_name; // 실제이름
 	private String m_photo;
+	private String m_alocator;
+	private String manager;
 	
 	
 	private signupVO vo;
@@ -161,6 +163,18 @@ public class BoardVO {
 	}
 	public void setM_photo(String m_photo) {
 		this.m_photo = m_photo;
+	}
+	public String getM_alocator() {
+		return m_alocator;
+	}
+	public void setM_alocator(String m_alocator) {
+		this.m_alocator = m_alocator;
+	}
+	public String getManager() {
+		return manager;
+	}
+	public void setManager(String manager) {
+		this.manager = manager;
 	}
 	
 }
